@@ -17,16 +17,16 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "random"
 #include "images.h"
 #include <string>
+#include <ctime>
+#include <list>
 //#include <iostream>
 
 //constant variables
 const float screen_width = 1600;
 const float screen_height = 950;
-const int speed = 10;
-const int gravity = 10;
+const int speed = 15;
 
-int counter = 0;
-
+std::list<Square> shapes;
 
 int main ()
 {
@@ -44,13 +44,19 @@ int main ()
 	//Texture krill = LoadTexture("krill.png");
 	Texture image = LoadTexture("maple.jpg");
 
-	Shape* maple = new ImageShape(LoadTexture("maple.jpg"), Vector2{500, 500}, 100.0f, WHITE);
+	
 	//Shape* shape = new Circle(Vector2{ 400, 400 }, 40.0f, WHITE);
-	Shape* shape2 = new Square(Vector2{ 500,500 }, 40.f, WHITE);
+	Square* projectile = new Square;
 	std::vector<Shape*> shapes;
 	bool selection = true;
-	shape2->draw();
-	maple->draw();
+	Shape* maple;
+	Square* hitbox;
+	Square* projectileHitbox;
+	bool start = true;
+	bool alive = true;
+	int health = 5;
+	int counter = 0;
+	bool invincibility = false;
 	
 	// game loop
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
@@ -58,30 +64,133 @@ int main ()
 		BeginDrawing();
 		ClearBackground(BLACK);
 
-		//std::string num = std::to_string(counter);
-		std::string updatedScore = "Score: " + std::to_string(counter);
-		char* score = const_cast <char*>(updatedScore.c_str());
-		DrawText(score, 50, 50, 40, WHITE);
-		counter += 1;
+		//start drawings
+		if (start) {
+			maple = new ImageShape(LoadTexture("maple.jpg"), Vector2{500, 500}, 125.0f, WHITE);
+			hitbox = new Square(Vector2{ 500,500 }, 125.0f, WHITE);
+			//DrawRectangle(500, 500, 125, 125, WHITE);
+			maple->draw();
+			//hitbox->draw();
+			start = false;
+		}
+		//score updating code and bullet amount
+		if (alive) {
+			std::string updatedScore = "Score: " + std::to_string(counter);
+			char* score = const_cast <char*>(updatedScore.c_str());
+			DrawText(score, 50, 50, 40, WHITE);
+			if (maple->getPosition().x > screen_width * 0.75f) {
+				counter += 3;
+			}
+			else if (maple->getPosition().x > screen_width / 2) {
+				counter += 2;
+			}
+			else {
+				counter += 1;
+			}
+			//counter = std::rand() % 950;
+		}
+		else {
+			std::string updatedScore = "Game Over! Score: " + std::to_string(counter);
+			char* score = const_cast <char*>(updatedScore.c_str());
+			DrawText(score, 50, 50, 40, WHITE);
+		}
 
-		//shape->draw();
+		//health text updating code
+		if (health > 0) {
+			std::string updatedHealth = "Health: " + std::to_string(health);
+			char* current = const_cast <char*>(updatedHealth.c_str());
+			DrawText(current, 1000, 50, 40, WHITE);
+		}
+		if (health <= 0) {
+			health == 0;
+			std::string updatedHealth = "Health: " + std::to_string(health);
+			char* current = const_cast <char*>(updatedHealth.c_str());
+			DrawText(current, 1000, 50, 40, WHITE);
+			alive = false;
+			delete(maple);
+			delete(hitbox);
+			shapes.clear();
+		}
+		
+
+		//movement if statements
 		Vector2 position = maple->getPosition();
-		if (IsKeyPressed(KEY_RIGHT)) {
+		if (IsKeyDown(KEY_RIGHT)) {
 			position.x += speed;
 			maple->update(position);
+			hitbox->update(position);
 		}
-		else if (IsKeyPressed(KEY_LEFT)) {
+		if (IsKeyDown(KEY_LEFT)) {
 			position.x -= speed;
 			maple->update(position);
+			hitbox->update(position);
 		}
-		else if (IsKeyPressed(KEY_SPACE)) {
-			position.y += speed;
-		}
-		position.y -= gravity;
-		maple->update(position);
-		if (position.y < 1000) {
-			position.y = 1000;
+		if (IsKeyDown(KEY_UP)) {
+			position.y -= speed;
 			maple->update(position);
+			hitbox->update(position);
+		}
+		if (IsKeyDown(KEY_DOWN)) {
+			position.y += speed;
+			maple->update(position);
+			hitbox->update(position);
+		}
+
+		maple->update(position);
+		if (position.y > 900) {
+			position.y = 900;
+			maple->update(position);
+			hitbox->update(position);
+		}else if (position.y < 50) {
+			position.y = 50;
+			maple->update(position);
+			hitbox->update(position);
+		}
+		if (position.x < 50) {
+			position.x = 50;
+			maple->update(position);
+			hitbox->update(position);
+		}else if (position.x > 1550) {
+			position.x = 1550;
+			maple->update(position);
+			hitbox->update(position);
+		}
+
+		//projectile spawning code
+		int range = 100;
+		if (counter % 1000 == 0) {
+			range += 5;
+		}
+		int rand = std::rand() % range;
+		if (rand >= 90){
+			float randomY = std::rand() % 950;
+			projectile = new Square(Vector2{ screen_width, randomY }, 40.f, WHITE);
+			//projectileHitbox = new Square(Vector2{ screen_width,randomY }, 40.0f, WHITE);
+			//projectile->draw();
+			shapes.push_back(projectile);
+		}
+		
+		for (int i = 0; i < shapes.size(); i++) {
+			Vector2 position = shapes[i]->getPosition();
+			shapes[i]->draw();
+			position.x -= speed+5;
+			shapes[i]->update(position);
+			shapes[i]->setPosition(position);
+			DrawRectangle(position.x, position.y, shapes[i]->getSize() * 3, shapes[i]->getSize() * 0.6f, WHITE);
+		}
+
+		//updating maple and hitbox positions
+		maple->setPosition(position);
+		hitbox->setPosition(position);
+
+		//DrawRectangle(position.x, position.y, 125, 125, WHITE);
+		/*if (CheckCollisionRecs() && !invicibility) {
+			health -= 1;
+			invicibility = true;
+		}*/
+		if (invincibility = true) {
+			
+			
 		}
 		
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)

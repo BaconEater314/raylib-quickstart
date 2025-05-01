@@ -4,6 +4,10 @@ void ImageShape::update(Vector2 position) {
 	draw(position);
 }
 
+void ImageShape::update() {
+	
+}
+
 void ImageShape::draw() {
 	Rectangle src{ 0,0,(float)m_texture.width, (float)m_texture.height };
 	Rectangle dest{ m_position.x,m_position.y,m_size,m_size };

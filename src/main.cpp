@@ -23,6 +23,7 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 const float screen_width = 1600;
 const float screen_height = 950;
 const int speed = 10;
+const int gravity = 10;
 
 int counter = 0;
 
@@ -59,18 +60,30 @@ int main ()
 
 		//std::string num = std::to_string(counter);
 		std::string updatedScore = "Score: " + std::to_string(counter);
-		char* score = const_cast < char*>(updatedScore.c_str());
+		char* score = const_cast <char*>(updatedScore.c_str());
 		DrawText(score, 50, 50, 40, WHITE);
 		counter += 1;
-		
+
 		//shape->draw();
-		
+		Vector2 position = maple->getPosition();
 		if (IsKeyPressed(KEY_RIGHT)) {
-			Vector2 position = maple->getPosition();
 			position.x += speed;
 			maple->update(position);
 		}
-
+		else if (IsKeyPressed(KEY_LEFT)) {
+			position.x -= speed;
+			maple->update(position);
+		}
+		else if (IsKeyPressed(KEY_SPACE)) {
+			position.y += speed;
+		}
+		position.y -= gravity;
+		maple->update(position);
+		if (position.y < 1000) {
+			position.y = 1000;
+			maple->update(position);
+		}
+		
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		
 		EndDrawing();
